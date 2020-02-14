@@ -30,18 +30,35 @@ class BaseCaption {
       };
 }
 
-abstract class CaptionMaker {
+abstract class BaseCaptionMaker {
   List<BaseCaption> captions = [];
+  BaseCaption currentCaption;
 
+  /// Add [caption] to [captions]
   Future<void> addCaption(BaseCaption caption);
+
+  /// Delete [caption] from [captions]
   Future<void> deleteCaption(BaseCaption caption);
-  Future<void> setCaptionTime(
+
+  /// Set [caption]'s start time, endtime and content
+  Future<void> setCaption({
     BaseCaption caption,
     Duration starttime,
     Duration endtime,
-  );
+    String content
+  });
 
-  Future<String> convertToFile(BaseCaptionOutput converter);
+  /// Get [caption] based on [current]
+  BaseCaption getCurrentCaption(Duration current);
+
+  /// Convert [captions] into file format
+  Future<void> convertToFile(BaseCaptionOutput converter);
+
+  /// Save current [captions] into file
+  Future<void> save();
+
+  /// Load [file] into captions
+  Future<void> load();
 }
 
 abstract class BaseCaptionOutput {

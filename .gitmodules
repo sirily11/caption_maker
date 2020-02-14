@@ -1,3 +1,6 @@
 [submodule "plugins"]
 	path = plugins
 	url = https://github.com/flutter/plugins.git
+[submodule "packages/flutter-desktop-embedding"]
+	path = packages/flutter-desktop-embedding
+	url = https://github.com/google/flutter-desktop-embedding.git

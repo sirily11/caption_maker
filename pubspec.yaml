@@ -19,8 +19,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  provider: ^4.0.4
+  timeline_list:
+    git:
+      url: https://github.com/sirily11/timeline_list.git
+
   video_player:
     path: ./packages/video_player/video_player
+  file_chooser:
+    path: ./packages/file_chooser
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

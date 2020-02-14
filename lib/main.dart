@@ -1,61 +1,28 @@
-import 'dart:io';
-
-import 'package:video_player/video_player.dart';
+import 'package:captions_maker/model/videoProvider.dart';
+import 'package:captions_maker/pages/home/homepage.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-void main() => runApp(VideoApp());
+void main() => runApp(MyApp());
 
-class VideoApp extends StatefulWidget {
-  @override
-  _VideoAppState createState() => _VideoAppState();
-}
-
-class _VideoAppState extends State<VideoApp> {
-  VideoPlayerController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.network(
-        "file:///Users/liqiwei/Desktop/%E5%8C%BB%E5%AD%A6%E8%A7%86%E9%A2%91.m4v")
-      ..initialize().then((_) {
-        // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
-        setState(() {});
-      });
-  }
-
+class MyApp extends StatelessWidget {
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Video Demo',
-      home: Scaffold(
-        body: Center(
-          child: _controller.value.initialized
-              ? AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: VideoPlayer(_controller),
-                )
-              : Container(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => VideoProvider(),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            setState(() {
-              _controller.value.isPlaying
-                  ? _controller.pause()
-                  : _controller.play();
-            });
-          },
-          child: Icon(
-            _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
-          ),
-        ),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Flutter Demo',
+        darkTheme: ThemeData.dark(),
+        theme:
+            ThemeData(primarySwatch: Colors.blue, brightness: Brightness.dark),
+        home: HomePage(),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _controller.dispose();
   }
 }
