@@ -100,6 +100,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.12.6"
+  menubar:
+    dependency: "direct main"
+    description:
+      path: "packages/menubar"
+      relative: true
+    source: path
+    version: "0.0.1"
   meta:
     dependency: transitive
     description:

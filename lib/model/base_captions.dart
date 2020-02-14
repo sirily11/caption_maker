@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:file_chooser/file_chooser.dart';
 import 'package:flutter/material.dart';
+import 'package:captions_maker/extensions/string_extensions.dart';
 
 class BaseCaption {
   int id;
@@ -23,16 +25,17 @@ class BaseCaption {
 
   factory BaseCaption.fromJson(Map<String, dynamic> json) {
     return BaseCaption(
-        id: json['id'],
-        content: json['content'],
-        starttime: json['starttime'],
-        endtime: json['endtime']);
+      id: json['id'],
+      content: json['content'],
+      starttime: (json['starttime'] as String).duration,
+      endtime: (json['endtime'] as String).duration,
+    );
   }
 
   Map<String, dynamic> toJson() => {
         "content": content,
-        'starttime': starttime,
-        'endtime': endtime,
+        'starttime': starttime.toString(),
+        'endtime': endtime.toString(),
         "id": id
       };
 
@@ -71,5 +74,17 @@ abstract class BaseCaptionMaker {
 }
 
 abstract class BaseCaptionOutput {
-  Future output(File outputFile);
+  String extensionName;
+
+  String convert(List<BaseCaption> captions);
+  Future output(List<BaseCaption> captions) async {
+    var result =
+        await showSavePanel(suggestedFileName: "My Caption.$extensionName");
+    if (!result.canceled) {
+      var path = result.paths.first;
+      var file = File(path);
+      var content = convert(captions);
+      await file.writeAsString(content);
+    }
+  }
 }

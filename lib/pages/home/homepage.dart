@@ -1,3 +1,4 @@
+import 'package:captions_maker/model/srtOutput.dart';
 import 'package:captions_maker/model/videoProvider.dart';
 import 'package:captions_maker/pages/home/captionList.dart';
 import 'package:captions_maker/pages/home/captionPreview.dart';
@@ -5,8 +6,52 @@ import 'package:captions_maker/pages/home/controlPanel.dart';
 import 'package:captions_maker/pages/home/videoPlayer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:menubar/menubar.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    VideoProvider provider = Provider.of(context, listen: false);
+    setApplicationMenu([
+      Submenu(label: "File", children: [
+        MenuItem(
+            label: "Open Saved File",
+            onClicked: () async {
+              provider.loadSaved();
+            }),
+        MenuItem(
+            label: "Open Text File",
+            onClicked: () async {
+              provider.load();
+            }),
+        MenuItem(
+            label: "Open Video File",
+            onClicked: () async {
+              await provider.openFile();
+            }),
+        Submenu(label: "Save As", children: [
+          MenuItem(
+              label: "SRT File",
+              onClicked: () async {
+                await provider.convertToFile(SRTOutput());
+              }),
+          MenuItem(label: "iTT file")
+        ]),
+        MenuItem(
+            label: "Save",
+            onClicked: () async {
+              await provider.save();
+            })
+      ])
+    ]);
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     VideoProvider provider = Provider.of(context);
@@ -16,6 +61,7 @@ class HomePage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         actions: <Widget>[
           IconButton(
+            tooltip: "Edit Mode",
             onPressed: () {
               if (provider.state == VideoState.edit) {
                 provider.state = VideoState.preview;
@@ -26,13 +72,6 @@ class HomePage extends StatelessWidget {
             icon: Icon(
               provider.state == VideoState.preview ? Icons.edit : Icons.done,
             ),
-          ),
-          IconButton(
-            tooltip: "Edit Mode",
-            onPressed: () async {
-              await provider.openFile();
-            },
-            icon: Icon(Icons.folder),
           ),
         ],
       ),

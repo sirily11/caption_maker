@@ -2,8 +2,11 @@ import 'package:captions_maker/model/videoProvider.dart';
 import 'package:captions_maker/pages/home/homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:menubar/menubar.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.

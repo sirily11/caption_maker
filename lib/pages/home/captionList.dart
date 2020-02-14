@@ -94,7 +94,8 @@ class _CaptionRowState extends State<CaptionRow> {
     VideoProvider provider = Provider.of(context);
 
     if (provider.currentCaption == widget.caption &&
-        provider.state == VideoState.edit) {
+        provider.state == VideoState.edit &&
+        provider.isPlaying) {
       if (provider.isSettingStartTime) {
         startFocus.requestFocus();
       } else {
@@ -102,7 +103,7 @@ class _CaptionRowState extends State<CaptionRow> {
       }
     }
 
-    if (provider.currentCaption == null) {
+    if (provider.currentCaption == null && provider.isPlaying) {
       FocusScope.of(context).requestFocus(FocusNode());
     }
 
@@ -160,6 +161,9 @@ class _CaptionRowState extends State<CaptionRow> {
           ? Theme.of(context).highlightColor.withAlpha(200)
           : null,
       child: InkWell(
+        onDoubleTap: () async {
+          await provider.seek(starttime.text.duration);
+        },
         onTap: () {
           provider.setCurrentCaption(widget.caption);
         },
@@ -259,12 +263,14 @@ class _CaptionRowState extends State<CaptionRow> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
                     IconButton(
+                      tooltip: "Delete caption",
                       onPressed: () async {
                         await provider.deleteCaption(widget.caption, context);
                       },
                       icon: Icon(Icons.delete),
                     ),
                     IconButton(
+                      tooltip: "Jump to this line",
                       onPressed: () async {
                         await provider.seek(starttime.text.duration);
                       },

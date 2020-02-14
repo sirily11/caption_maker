@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:captions_maker/model/base_captions.dart';
+import 'package:captions_maker/model/jsonOutput.dart';
 import 'package:captions_maker/pages/home/captionList.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -17,20 +18,7 @@ class VideoProvider with ChangeNotifier implements BaseCaptionMaker {
   ScrollController scrollController = ScrollController();
   Duration currentPosition = Duration(microseconds: 0);
   VideoState _state = VideoState.preview;
-  List<BaseCaption> captions = [
-    BaseCaption(
-      id: 0,
-      content: "Hello",
-      starttime: Duration(seconds: 0),
-      endtime: Duration(seconds: 10),
-    ),
-    BaseCaption(
-      id: 1,
-      content: "Hello1",
-      starttime: Duration(seconds: 10),
-      endtime: Duration(seconds: 20),
-    )
-  ];
+  List<BaseCaption> captions = [];
   BaseCaption currentCaption;
   BaseCaption prevCaption;
 
@@ -83,6 +71,17 @@ class VideoProvider with ChangeNotifier implements BaseCaptionMaker {
   /// Pause video
   Future<void> pause() async {
     await controller?.pause();
+  }
+
+  Future<void> loadSaved() async {
+    var result = await showOpenPanel(allowedFileTypes: ['json']);
+    if (!result.canceled) {
+      var file = File(result.paths.first);
+      String content = await file.readAsString();
+      List<dynamic> json = JsonDecoder().convert(content);
+      captions = json.map((e) => BaseCaption.fromJson(e)).toList();
+      notifyListeners();
+    }
   }
 
   /// Seek video
@@ -148,9 +147,8 @@ class VideoProvider with ChangeNotifier implements BaseCaptionMaker {
   }
 
   @override
-  Future<void> convertToFile(BaseCaptionOutput converter) {
-    // TODO: implement convertToFile
-    throw UnimplementedError();
+  Future<void> convertToFile(BaseCaptionOutput converter) async {
+    await converter.output(captions);
   }
 
   @override
@@ -192,15 +190,34 @@ class VideoProvider with ChangeNotifier implements BaseCaptionMaker {
   }
 
   @override
-  Future<void> load() {
-    // TODO: implement load
-    throw UnimplementedError();
+  Future<void> load() async {
+    var result = await showOpenPanel(allowedFileTypes: ['txt']);
+    if (!result.canceled) {
+      String path = result.paths.first;
+      var file = File(path);
+      var content = await file.readAsString();
+      var lines = content.split("\n");
+      List<BaseCaption> cps = [];
+      int i = 1;
+      for (var line in lines) {
+        cps.add(
+          BaseCaption(
+            id: i,
+            content: line,
+            starttime: Duration(seconds: 0),
+            endtime: Duration(seconds: 1),
+          ),
+        );
+        i += 1;
+      }
+      captions = cps;
+      notifyListeners();
+    }
   }
 
   @override
-  Future<void> save() {
-    // TODO: implement save
-    throw UnimplementedError();
+  Future<void> save() async {
+    await JSONOutput().output(captions);
   }
 
   @override
