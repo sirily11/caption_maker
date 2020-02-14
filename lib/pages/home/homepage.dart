@@ -16,11 +16,24 @@ class HomePage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         actions: <Widget>[
           IconButton(
+            onPressed: () {
+              if (provider.state == VideoState.edit) {
+                provider.state = VideoState.preview;
+              } else {
+                provider.state = VideoState.edit;
+              }
+            },
+            icon: Icon(
+              provider.state == VideoState.preview ? Icons.edit : Icons.done,
+            ),
+          ),
+          IconButton(
+            tooltip: "Edit Mode",
             onPressed: () async {
               await provider.openFile();
             },
             icon: Icon(Icons.folder),
-          )
+          ),
         ],
       ),
       body: Row(
@@ -38,13 +51,13 @@ class HomePage extends StatelessWidget {
                   child: VideoPlayer(),
                 ),
                 Expanded(
-                  flex: 2,
-                  child: CaptionPreview(),
+                  flex: 1,
+                  child: ControlPanel(),
                 ),
                 Divider(),
                 Expanded(
-                  flex: 1,
-                  child: ControlPanel(),
+                  flex: 2,
+                  child: CaptionPreview(),
                 ),
                 Divider(),
                 Expanded(
@@ -57,7 +70,11 @@ class HomePage extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () async {
+          if (provider.state == VideoState.edit) {
+            await provider.setTime();
+          }
+        },
         child: Icon(Icons.add),
       ),
     );

@@ -1,15 +1,22 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:captions_maker/model/base_captions.dart';
+import 'package:captions_maker/pages/home/captionList.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:file_chooser/file_chooser.dart';
 
+enum VideoState { edit, preview }
+
 class VideoProvider with ChangeNotifier implements BaseCaptionMaker {
   VideoPlayerController controller;
   bool isPlaying = false;
+  bool isSettingStartTime = true;
+  ScrollController scrollController = ScrollController();
   Duration currentPosition = Duration(microseconds: 0);
+  VideoState _state = VideoState.preview;
   List<BaseCaption> captions = [
     BaseCaption(
       id: 0,
@@ -25,6 +32,14 @@ class VideoProvider with ChangeNotifier implements BaseCaptionMaker {
     )
   ];
   BaseCaption currentCaption;
+  BaseCaption prevCaption;
+
+  set state(VideoState s) {
+    _state = s;
+    notifyListeners();
+  }
+
+  VideoState get state => this._state;
 
   /// Open Video File
   Future<void> openFile() async {
@@ -37,10 +52,26 @@ class VideoProvider with ChangeNotifier implements BaseCaptionMaker {
       controller.addListener(() async {
         isPlaying = controller.value.isPlaying;
         currentPosition = await controller.position;
-        currentCaption = getCurrentCaption(currentPosition);
+        if (state == VideoState.preview) {
+          currentCaption = getCurrentCaption(currentPosition);
+          await scrollTo(currentCaption);
+        }
+
         notifyListeners();
       });
       notifyListeners();
+    }
+  }
+
+  Future<void> scrollTo(BaseCaption caption) async {
+    int index = captions.indexWhere((element) => element.id == caption?.id);
+    if (index > -1) {
+      double offset = index * CAPTION_ROW_HEIGHT;
+      offset = min(offset, scrollController.position.maxScrollExtent);
+      if (offset != scrollController.offset) {
+        await scrollController.animateTo(offset,
+            duration: Duration(milliseconds: 200), curve: Curves.easeIn);
+      }
     }
   }
 
@@ -57,6 +88,57 @@ class VideoProvider with ChangeNotifier implements BaseCaptionMaker {
   /// Seek video
   Future<void> seek(Duration time) async {
     await controller?.seekTo(time);
+    isSettingStartTime = true;
+    if (currentCaption == null) {
+      currentCaption = getCurrentCaption(time) ?? captions[0];
+    }
+    notifyListeners();
+  }
+
+  Future<void> back5Sec() async {
+    await this.seek(
+      Duration(milliseconds: currentPosition.inMilliseconds - 5000),
+    );
+  }
+
+  Future<void> forward5Sec() async {
+    await this.seek(
+      Duration(milliseconds: currentPosition.inMilliseconds + 5000),
+    );
+  }
+
+  void setCurrentCaption(BaseCaption caption) {
+    currentCaption = caption;
+    isSettingStartTime = true;
+    notifyListeners();
+  }
+
+  /// Set [time] to [currentCaption] when set button be clicked
+  Future<void> setTime() async {
+    if (currentCaption == null) {
+      return;
+    }
+    if (isSettingStartTime) {
+      currentCaption.starttime = currentPosition;
+      isSettingStartTime = false;
+    } else {
+      currentCaption.endtime = currentPosition;
+      isSettingStartTime = true;
+      prevCaption = currentCaption;
+      currentCaption = null;
+    }
+    if (isSettingStartTime) {
+      int prevIndex = captions.indexWhere((element) => element == prevCaption);
+      if (prevIndex > -1 && prevIndex < captions.length - 1) {
+        currentCaption = captions[prevIndex + 1];
+        await scrollTo(currentCaption);
+        notifyListeners();
+      } else {
+        return;
+      }
+    }
+
+    notifyListeners();
   }
 
   @override
@@ -72,8 +154,28 @@ class VideoProvider with ChangeNotifier implements BaseCaptionMaker {
   }
 
   @override
-  Future<void> deleteCaption(BaseCaption caption) async {
-    captions.remove(caption);
+  Future<void> deleteCaption(BaseCaption caption, BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text("Delete Caption?"),
+        content: Text("You cannot undo this action"),
+        actions: <Widget>[
+          FlatButton(
+            child: Text("Cancel"),
+            onPressed: () => Navigator.pop(context),
+          ),
+          FlatButton(
+            child: Text("OK"),
+            onPressed: () {
+              captions.remove(caption);
+              notifyListeners();
+              Navigator.pop(context);
+            },
+          )
+        ],
+      ),
+    );
   }
 
   @override

@@ -8,11 +8,18 @@ class BaseCaption {
   Duration starttime;
   Duration endtime;
 
-  BaseCaption(
-      {@required this.id,
-      @required this.content,
-      @required this.starttime,
-      @required this.endtime});
+  BaseCaption({
+    @required this.id,
+    @required this.content,
+    @required this.starttime,
+    @required this.endtime,
+  });
+
+  bool operator ==(o) =>
+      o is BaseCaption &&
+      o.id == id &&
+      o.starttime == starttime &&
+      o.endtime == endtime;
 
   factory BaseCaption.fromJson(Map<String, dynamic> json) {
     return BaseCaption(
@@ -28,6 +35,9 @@ class BaseCaption {
         'endtime': endtime,
         "id": id
       };
+
+  @override
+  int get hashCode => super.hashCode;
 }
 
 abstract class BaseCaptionMaker {
@@ -38,15 +48,14 @@ abstract class BaseCaptionMaker {
   Future<void> addCaption(BaseCaption caption);
 
   /// Delete [caption] from [captions]
-  Future<void> deleteCaption(BaseCaption caption);
+  Future<void> deleteCaption(BaseCaption caption, BuildContext context);
 
   /// Set [caption]'s start time, endtime and content
-  Future<void> setCaption({
-    BaseCaption caption,
-    Duration starttime,
-    Duration endtime,
-    String content
-  });
+  Future<void> setCaption(
+      {BaseCaption caption,
+      Duration starttime,
+      Duration endtime,
+      String content});
 
   /// Get [caption] based on [current]
   BaseCaption getCurrentCaption(Duration current);

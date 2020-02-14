@@ -13,12 +13,14 @@ class CaptionPreview extends StatelessWidget {
         Container(
           width: 120,
           child: Text(
-            "${provider.currentPosition.shortString}   :  ${provider.controller?.value?.duration?.shortString ?? Duration(milliseconds: 0)}",
+            "${provider.currentPosition.shortString}   :  ${provider.controller?.value?.duration?.shortString ?? Duration(milliseconds: 0).shortString}",
           ),
         ),
         VerticalDivider(),
         Text(
-          "abcde",
+          provider.currentCaption != null
+              ? provider.currentCaption.content
+              : "",
           style: TextStyle(fontSize: 20),
         ),
       ],
