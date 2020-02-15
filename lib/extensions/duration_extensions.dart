@@ -34,4 +34,26 @@ extension DurationToString on Duration {
         threeDigits(inMicroseconds.remainder(Duration.millisecondsPerSecond));
     return "$twoDigitHours:$twoDigitMinutes:$twoDigitSeconds,$threeDigitMillions";
   }
+
+  /// get srt format timestamp
+  String get ittString {
+    String twoDigits(int n) {
+      if (n >= 10) return "$n";
+      return "0$n";
+    }
+
+    String threeDigits(int n) {
+      if (n > 10) return "0$n";
+      if (n >= 100) return "$n";
+      return "00$n";
+    }
+
+    String twoDigitHours = twoDigits(inHours);
+    String twoDigitMinutes =
+        twoDigits(inMinutes.remainder(Duration.minutesPerHour));
+    String twoDigitSeconds =
+        twoDigits(inSeconds.remainder(Duration.secondsPerMinute));
+    String threeDigitMillions = twoDigits(inMicroseconds.remainder(30));
+    return "$twoDigitHours:$twoDigitMinutes:$twoDigitSeconds:$threeDigitMillions";
+  }
 }

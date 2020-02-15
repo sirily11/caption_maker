@@ -1,3 +1,4 @@
+import 'package:captions_maker/model/ittOutput.dart';
 import 'package:captions_maker/model/srtOutput.dart';
 import 'package:captions_maker/model/videoProvider.dart';
 import 'package:captions_maker/pages/home/captionList.dart';
@@ -5,6 +6,7 @@ import 'package:captions_maker/pages/home/captionPreview.dart';
 import 'package:captions_maker/pages/home/controlPanel.dart';
 import 'package:captions_maker/pages/home/videoPlayer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:menubar/menubar.dart';
 
@@ -40,16 +42,40 @@ class _HomePageState extends State<HomePage> {
               onClicked: () async {
                 await provider.convertToFile(SRTOutput());
               }),
-          MenuItem(label: "iTT file")
+          MenuItem(
+              label: "iTT file",
+              onClicked: () async {
+                await provider.convertToFile(IttOutput());
+              })
         ]),
         MenuItem(
             label: "Save",
             onClicked: () async {
               await provider.save();
             })
+      ]),
+      Submenu(label: "Caption", children: [
+        MenuItem(
+            label: "Add caption time",
+            shortcut: LogicalKeySet(LogicalKeyboardKey.f1),
+            onClicked: () async {
+              await provider.setTime();
+            }),
+        MenuItem(
+            label: "Settings",
+            onClicked: () async {
+              await provider.showSettings(context);
+            })
       ])
     ]);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    VideoProvider provider = Provider.of(context, listen: false);
+    provider.controller.dispose();
+    super.dispose();
   }
 
   @override

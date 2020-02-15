@@ -20,6 +20,8 @@ dependencies:
   flutter:
     sdk: flutter
   provider: ^4.0.4
+  flutter_widgets: ^0.1.11
+  shared_preferences: ^0.5.6+1
   timeline_list:
     git:
       url: https://github.com/sirily11/timeline_list.git

@@ -5,7 +5,10 @@ import 'dart:math';
 import 'package:captions_maker/model/base_captions.dart';
 import 'package:captions_maker/model/jsonOutput.dart';
 import 'package:captions_maker/pages/home/captionList.dart';
+import 'package:captions_maker/pages/settings/settingPage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_widgets/flutter_widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:file_chooser/file_chooser.dart';
 
@@ -15,19 +18,44 @@ class VideoProvider with ChangeNotifier implements BaseCaptionMaker {
   VideoPlayerController controller;
   bool isPlaying = false;
   bool isSettingStartTime = true;
-  ScrollController scrollController = ScrollController();
+  ItemScrollController scrollController = ItemScrollController();
   Duration currentPosition = Duration(microseconds: 0);
   VideoState _state = VideoState.preview;
   List<BaseCaption> captions = [];
   BaseCaption currentCaption;
   BaseCaption prevCaption;
+  int timeSpace = 800;
+  bool _useStarttimeReplaceEndtime = true;
 
   set state(VideoState s) {
     _state = s;
+    postProcessCaptions();
     notifyListeners();
   }
 
+  VideoProvider() {
+    SharedPreferences.getInstance().then((ins) async {
+      timeSpace = ins.getInt("time_period") ?? timeSpace;
+      _useStarttimeReplaceEndtime =
+          ins.getBool("useStart") ?? _useStarttimeReplaceEndtime;
+    });
+  }
+
   VideoState get state => this._state;
+
+  bool get useStarttimeReplaceEndtime => _useStarttimeReplaceEndtime;
+
+  set useStarttimeReplaceEndtime(bool v) {
+    _useStarttimeReplaceEndtime = v;
+    notifyListeners();
+  }
+
+  Future<void> showSettings(BuildContext context) async {
+    await showDialog(context: context, builder: (c) => SettingPage());
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("useStart", _useStarttimeReplaceEndtime);
+    await prefs.setInt("time_period", timeSpace);
+  }
 
   /// Open Video File
   Future<void> openFile() async {
@@ -51,15 +79,32 @@ class VideoProvider with ChangeNotifier implements BaseCaptionMaker {
     }
   }
 
+  /// If line 1's endtime is closer to line2's startime
+  /// then use line2's starttime as line1's endtime
+  void postProcessCaptions() {
+    if (useStarttimeReplaceEndtime) {
+      int i = 0;
+      for (var caption in captions) {
+        if (i < captions.length - 1) {
+          if (captions[i + 1].starttime.inMilliseconds -
+                  caption.endtime.inMilliseconds <
+              timeSpace) {
+            caption.endtime = captions[i + 1].starttime;
+          }
+        }
+
+        i += 1;
+      }
+    }
+  }
+
   Future<void> scrollTo(BaseCaption caption) async {
     int index = captions.indexWhere((element) => element.id == caption?.id);
-    if (index > -1) {
-      double offset = index * CAPTION_ROW_HEIGHT;
-      offset = min(offset, scrollController.position.maxScrollExtent);
-      if (offset != scrollController.offset) {
-        await scrollController.animateTo(offset,
-            duration: Duration(milliseconds: 200), curve: Curves.easeIn);
-      }
+    if (index > -1 && index < captions.length - 2) {
+      await scrollController.scrollTo(
+        index: index,
+        duration: Duration(milliseconds: 300),
+      );
     }
   }
 
@@ -166,7 +211,7 @@ class VideoProvider with ChangeNotifier implements BaseCaptionMaker {
           FlatButton(
             child: Text("OK"),
             onPressed: () {
-              captions.remove(caption);
+              captions.removeWhere((element) => element.id == caption.id);
               notifyListeners();
               Navigator.pop(context);
             },
@@ -200,6 +245,9 @@ class VideoProvider with ChangeNotifier implements BaseCaptionMaker {
       List<BaseCaption> cps = [];
       int i = 1;
       for (var line in lines) {
+        if (line == "") {
+          continue;
+        }
         cps.add(
           BaseCaption(
             id: i,

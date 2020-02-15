@@ -17,12 +17,6 @@ class BaseCaption {
     @required this.endtime,
   });
 
-  bool operator ==(o) =>
-      o is BaseCaption &&
-      o.id == id &&
-      o.starttime == starttime &&
-      o.endtime == endtime;
-
   factory BaseCaption.fromJson(Map<String, dynamic> json) {
     return BaseCaption(
       id: json['id'],
@@ -38,9 +32,6 @@ class BaseCaption {
         'endtime': endtime.toString(),
         "id": id
       };
-
-  @override
-  int get hashCode => super.hashCode;
 }
 
 abstract class BaseCaptionMaker {
